@@ -14,7 +14,7 @@ API.interceptors.request.use((config) => {
   const auth = storedAuth ? JSON.parse(storedAuth) : null;
 
   if (auth?.token) {
-    if (!config.headers) config.headers = {};
+    config.headers = config.headers ?? {};
     config.headers.Authorization = `Bearer ${auth.token}`;
   }
 
