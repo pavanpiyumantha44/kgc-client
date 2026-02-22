@@ -1,36 +1,41 @@
 import { configureStore } from "@reduxjs/toolkit";
 import authReducer from "./auth/AuthSlice";
+import type { AuthState } from "../types/auth";
 
-// ---- 1️⃣ Safely parse localStorage ----
+// ---- Persisted type ----
 type PersistedAuth = {
-  user: unknown | null;
+  user: AuthState["user"];
   token: string | null;
 };
 
-let persistedAuth: PersistedAuth | null = null;
+// ---- Parse localStorage safely ----
+const loadAuth = (): PersistedAuth | null => {
+  try {
+    const raw = localStorage.getItem("auth");
+    if (!raw) return null;
+    return JSON.parse(raw) as PersistedAuth;
+  } catch {
+    return null;
+  }
+};
 
-const storedAuth = localStorage.getItem("auth");
-if (storedAuth) {
-  persistedAuth = JSON.parse(storedAuth) as PersistedAuth;
-}
+const persistedAuth = loadAuth();
 
-// ---- 2️⃣ Preloaded state (typed correctly) ----
-const preloadedState = {
+// ---- Preloaded state ----
+const preloadedState: { auth: AuthState } = {
   auth: {
     user: persistedAuth?.user ?? null,
     token: persistedAuth?.token ?? null,
-    isAuthenticated: Boolean(persistedAuth),
+    isAuthenticated: !!persistedAuth?.token,
   },
 };
 
-// ---- 3️⃣ Store ----
+// ---- Store ----
 export const store = configureStore({
-  reducer: {
-    auth: authReducer,
-  },
+  reducer: { auth: authReducer },
   preloadedState,
 });
 
-// ---- 4️⃣ Required TS exports ----
+// ---- Types ----
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;
